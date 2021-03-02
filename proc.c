@@ -13,6 +13,9 @@ struct {
 } ptable;
 
 static struct proc *initproc;
+struct proc * getptable_proc(){
+  return ptable.proc;
+}
 
 int nextpid = 1;
 extern void forkret(void);

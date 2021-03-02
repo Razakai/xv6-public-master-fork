@@ -186,6 +186,7 @@ UPROGS=\
 	_cp\
 	_mv\
 	_testingTrace\
+	_ps\
 
 fs.img: mkfs README $(UPROGS)
 	./mkfs fs.img README $(UPROGS)
