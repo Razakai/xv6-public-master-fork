@@ -103,6 +103,7 @@ extern int sys_unlink(void);
 extern int sys_wait(void);
 extern int sys_write(void);
 extern int sys_uptime(void);
+extern int sys_trace(void);
 
 static int (*syscalls[])(void) = {
 [SYS_fork]    sys_fork,
@@ -126,10 +127,11 @@ static int (*syscalls[])(void) = {
 [SYS_link]    sys_link,
 [SYS_mkdir]   sys_mkdir,
 [SYS_close]   sys_close,
+[SYS_trace]   sys_trace,
 };
 
 void
-syscall(void)
+syscall(void) // all sys calls come through here so i can use the counting procedure here
 {
   int num;
   struct proc *curproc = myproc();
@@ -137,6 +139,17 @@ syscall(void)
   num = curproc->tf->eax;
   if(num > 0 && num < NELEM(syscalls) && syscalls[num]) {
     curproc->tf->eax = syscalls[num]();
+
+    if(curproc->tracing) {
+      curproc->callCount = curproc->callCount + 1;
+      cprintf("pid: %d [%s] syscall: %d tracing: %d call count: %d\n",
+          curproc->pid, curproc->name, num, curproc->tracing, curproc->callCount);
+    }
+   
+    //cprintf("%d %s: unknown sys call %d, tracing %d\n",
+          //curproc->pid, curproc->name, num, curproc->tracing);
+    
+
   } else {
     cprintf("%d %s: unknown sys call %d\n",
             curproc->pid, curproc->name, num);

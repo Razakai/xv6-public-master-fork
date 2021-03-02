@@ -88,6 +88,8 @@ allocproc(void)
 found:
   p->state = EMBRYO;
   p->pid = nextpid++;
+  p->tracing = 0;
+  p->callCount = 0;
 
   release(&ptable.lock);
 
@@ -531,4 +533,30 @@ procdump(void)
     }
     cprintf("\n");
   }
+}
+
+int
+trace(int num)
+{
+  struct proc *p;
+
+  sti();
+  cprintf("number passed in: %d", num);
+  //cprintf("Current value %d", ptable.proc->tracing);
+
+  acquire(&ptable.lock);
+  p = ptable.proc;
+  p->tracing = num;
+ // cprintf("name \t pid \t state \t \n");
+  //for(p = ptable.proc; p < &ptable.proc[NPROC]; p++) {
+  //  if (p->state == SLEEPING)
+    //  cprintf("%s \t %d \t SLEEPING \t \n ", p->name, p->pid);
+    //else if (p->state == RUNNING)
+      //cprintf("%s \t %d \t RUNNING \t \n ", p->name, p->pid);
+    //else if (p->state == RUNNABLE)
+      //cprintf("%s \t %d \t RUNNABLE \t \n ", p->name, p->pid);
+  //}
+  release(&ptable.lock);
+
+  return 22;
 }
