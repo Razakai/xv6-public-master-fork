@@ -182,7 +182,7 @@ UPROGS=\
 	_wc\
 	_zombie\
 	_hello\
-	_question2\
+	_head\
 	_cp\
 	_mv\
 	_testingTrace\
