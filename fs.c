@@ -374,21 +374,31 @@ bmap(struct inode *ip, uint bn)
 {
   uint addr, *a;
   struct buf *bp;
-
+//printf("bmap %u\n",bn);
+  // Direct block
   if(bn < NDIRECT){
+//printf("direct block bn is %d\n",bn);
     if((addr = ip->addrs[bn]) == 0)
+      // Logical block not yet allocated
       ip->addrs[bn] = addr = balloc(ip->dev);
     return addr;
   }
+
   bn -= NDIRECT;
 
+  // Indirect block
   if(bn < NINDIRECT){
-    // Load indirect block, allocating if necessary.
+//printf("indirect block bn is %d\n",bn);
     if((addr = ip->addrs[NDIRECT]) == 0)
+      // Indirect block itself not yet allocated
       ip->addrs[NDIRECT] = addr = balloc(ip->dev);
+
+    // Read+lock indirect block
     bp = bread(ip->dev, addr);
     a = (uint*)bp->data;
+
     if((addr = a[bn]) == 0){
+      // Logical block not yet allocated
       a[bn] = addr = balloc(ip->dev);
       log_write(bp);
     }
@@ -396,7 +406,40 @@ bmap(struct inode *ip, uint bn)
     return addr;
   }
 
+  bn -= NINDIRECT;
+
+  // Double-indirect block
+  if (bn < NINDIRECT*NINDIRECT) {
+    //printf("double indirect block bn is %d\n", bn);
+    
+    if((addr = ip->addrs[NDIRECT + 1]) == 0) {
+      ip->addrs[NDIRECT+1] = addr = balloc(ip->dev);
+    }
+
+    bp = bread(ip->dev, addr);
+    a = (uint*)bp->data;
+
+    if((addr = a[bn/NINDIRECT]) == 0) {
+      a[bn/NINDIRECT] = addr = balloc(ip->dev);
+      log_write(bp);
+      }
+      brelse(bp);
+
+    bp = bread(ip->dev, addr);
+    a = (uint*)bp->data;
+
+    if((addr = a[bn%NINDIRECT]) == 0) {
+      a[bn%NINDIRECT] = addr = balloc(ip->dev);
+      log_write(bp);
+    }
+
+    brelse(bp);
+    return addr;
+    
+  }
+
   panic("bmap: out of range");
+  return -1;
 }
 
 // Truncate inode (discard contents).
